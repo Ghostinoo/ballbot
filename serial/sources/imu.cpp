@@ -257,6 +257,9 @@ bool IMU::SetContent(WitContentType rsw) {
     return false;
   }
 }
+WitContentType operator+(WitContentType a, WitContentType b) {
+  return static_cast<WitContentType>(static_cast<int>(a) | static_cast<int>(b));
+}
 
 
 void IMU::Initialize() {
@@ -283,18 +286,3 @@ void IMU::dataInputLoop() {
     while (wt901.readNoExcept(buffer, 1) && dataInputThreadRunning)
       handleDataIn(buffer[0]);
 }
-
-
-// int32_t WitSetUartBaud(int32_t uiBaudIndex)
-// {
-// 	if(!CheckRange(uiBaudIndex,WIT_BAUD_4800,WIT_BAUD_230400))
-// 	{
-// 		return WIT_HAL_INVAL;
-// 	}
-// 	if(WitWriteReg(KEY, KEY_UNLOCK) != WIT_HAL_OK)	return  WIT_HAL_ERROR;
-// 	if(s_uiProtoclo == WIT_PROTOCOL_MODBUS)	p_WitDelaymsFunc(20);
-// 	else if(s_uiProtoclo == WIT_PROTOCOL_NORMAL) p_WitDelaymsFunc(1);
-// 	else ;
-// 	if(WitWriteReg(BAUD, uiBaudIndex) != WIT_HAL_OK)	return  WIT_HAL_ERROR;
-// 	return WIT_HAL_OK;
-// }

@@ -231,6 +231,7 @@ enum WitContentType {
   RSW_GSA		 =  0x400,
   RSW_MASK	 =  0xfff
 };
+WitContentType operator+(WitContentType a, WitContentType b);
 
 /**RRATE*****/
 enum WitOutputRateType {
