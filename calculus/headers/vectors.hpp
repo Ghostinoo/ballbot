@@ -3,9 +3,9 @@
 
 #include <ostream>
 
-struct Vector3 {
+struct __attribute__((packed)) Vector3 {
 
-  float x,y,z;
+  float x, y, z;
 
   Vector3 (float x, float y, float z);
   Vector3 (): x(0), y(0), z(0) {}

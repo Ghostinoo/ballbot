@@ -4,6 +4,7 @@
 #include <thread>
 #include <atomic>
 #include <shared_mutex>
+#include <vector>
 #include "REGS.h"
 
 // Libreria per WT901
@@ -23,8 +24,7 @@ class IMU {
     static std::atomic<bool> dataInputThreadRunning;
 
     typedef void (*OnRegUpdateCallback)(WitRegType reg, uint16_t *data, size_t len);
-    static OnRegUpdateCallback onRegUpdate[];
-    static int onRegUpdateIndex;
+    static std::vector<OnRegUpdateCallback> onRegUpdate;
 
     static WitRegType readRegIndex;
   

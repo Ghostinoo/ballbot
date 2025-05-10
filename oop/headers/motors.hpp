@@ -2,6 +2,7 @@
 #pragma once
 
 #include <iostream>
+#include <vector>
 #include "../../calculus/headers/vectors.hpp"
 
 #define MOTOR_MAX_SPEED 80000.0f // rad/s
@@ -46,14 +47,19 @@ struct Motor {
 
 class Motors {
   private:
+    static Vector3 speed;
     static Motor front, rear_r, rear_l;
+  
+    static void computeVectors(Vector3 *vel);
+    static void writeSpeed();
+    static void updateEstimator(Vector3 vel);
+  
     Motors () {}
     ~Motors() {}
 
   public:
-    static void init();
-    static void computeVectors(Vector3 vel);
-    static void writeSpeed();
-    static void powerOn();
-    static void powerOff();
+    static void Initialize();
+    static void SetSpeed(Vector3 *vel);
+    static void PowerOn();
+    static void PowerOff();
 };

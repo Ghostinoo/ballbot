@@ -13,8 +13,7 @@ std::atomic<bool> IMU::dataInputThreadRunning = false;
 
 WitRegType IMU::readRegIndex;
 
-IMU::OnRegUpdateCallback IMU::onRegUpdate[] = {nullptr};
-int IMU::onRegUpdateIndex = 0;
+std::vector<IMU::OnRegUpdateCallback> IMU::onRegUpdate;
 
 uint16_t IMU::sensorData[REGSIZE] = {0};
 std::shared_mutex IMU::sensorDataMutex;
@@ -53,9 +52,9 @@ void IMU::copeWithData(WitOutputHeadType regType, uint16_t *data, size_t len) {
   std::unique_lock<std::shared_mutex> lock(sensorDataMutex);
 
   memcpy(&sensorData[reg1.reg], reg1.pointer, reg1.size);
-  for (int i = 0; i < onRegUpdateIndex; i++)
-    if (onRegUpdate[i] != nullptr)
-      std::thread(onRegUpdate[i], reg1.reg, reg1.pointer, reg1.size).detach();
+  for (IMU::OnRegUpdateCallback &cb : onRegUpdate)
+    std::thread(cb, reg2.reg, reg2.pointer, reg2.size).detach();
+
   #ifdef DEBUG
     std::cout << "IMU Reg Update: 0x" << std::hex << reg1.reg << " - Data: ";
     for (size_t i = 0; i < reg1.size; i++) std::cout << std::hex << (int)reg1.pointer[i];
@@ -63,10 +62,11 @@ void IMU::copeWithData(WitOutputHeadType regType, uint16_t *data, size_t len) {
   #endif
 
   if (reg2.size > 0) {
+  
     memcpy(&sensorData[reg2.reg], reg2.pointer, reg2.size);
-    for (int i = 0; i < onRegUpdateIndex; i++)
-      if (onRegUpdate[i] != nullptr)
-        std::thread(onRegUpdate[i], reg2.reg, reg2.pointer, reg2.size).detach();
+    for (IMU::OnRegUpdateCallback &cb : onRegUpdate)
+      std::thread(cb, reg2.reg, reg2.pointer, reg2.size).detach();
+  
     #ifdef DEBUG
       std::cout << "IMU Reg Update: 0x" << std::hex << reg2.reg << " - Data: ";
       for (size_t i = 0; i < reg2.size; i++) std::cout << std::hex << (int)reg1.pointer[i];
@@ -274,7 +274,7 @@ void IMU::Destroy() {
 }
 void IMU::RegisterRegUpdateCallback(void (*callback)(WitRegType, uint16_t *, size_t)) {
   if (callback == nullptr) throw std::invalid_argument("Callback non valida.");
-  onRegUpdate[onRegUpdateIndex++] = callback;
+  onRegUpdate.push_back(callback);
   #ifdef DEBUG
     std::cout << "IMU Callback Registered at position: " << onRegUpdateIndex << std::endl;
   #endif
