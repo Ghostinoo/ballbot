@@ -2,6 +2,7 @@
 #include "../headers/motors.hpp"
 #include "../../serial/headers/i2c.hpp"
 #include "../headers/battery.hpp"
+#include "../headers/estimator.hpp"
 #include <cmath>
 #include <algorithm>
 #include <thread>
@@ -112,11 +113,6 @@ void Motors::writeSpeed() {
 void Motors::SetSpeed(Vector3 *vel) {
   Motors::computeVectors(vel);
   Motors::writeSpeed();
-  std::thread(&Motors::updateEstimator, speed).detach();
+  std::thread(Estimator::updatePosition, speed).detach();
   speed = *vel;
-}
-
-
-void Motors::updateEstimator(Vector3 vel) {
-  
 }

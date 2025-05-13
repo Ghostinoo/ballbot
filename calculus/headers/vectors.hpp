@@ -20,4 +20,5 @@ struct __attribute__((packed)) Vector3 {
   Vector3 project(const Vector3& other) const;
 
   friend std::ostream& operator<<(std::ostream&, const Vector3& v);
+  friend Vector3 operator*(float scalar, const Vector3& v);
 };

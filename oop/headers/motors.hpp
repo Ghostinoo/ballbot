@@ -4,10 +4,8 @@
 #include <iostream>
 #include <vector>
 #include "../../calculus/headers/vectors.hpp"
+#include "../../conf.h"
 
-#define MOTOR_MAX_SPEED 80000.0f // rad/s
-#define BALL_DIAMETER 0.173f // m
-#define WHEEL_DIAMETER 0.08f // m
 const float BALL_WHEEL_RATIO = (BALL_DIAMETER / WHEEL_DIAMETER);
 
 #define CMD_POWER_ON 0x01
