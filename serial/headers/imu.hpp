@@ -6,6 +6,7 @@
 #include <shared_mutex>
 #include <vector>
 #include "REGS.h"
+#include "../../oop/typings/state.hpp"
 
 // Libreria per WT901
 
@@ -28,7 +29,7 @@ class IMU {
 
     static WitRegType readRegIndex;
   
-    static uint16_t sensorData[REGSIZE];
+    static int16_t sensorData[REGSIZE];
     static std::shared_mutex sensorDataMutex;
   
     static void copeWithData(WitOutputHeadType regType, uint16_t *data, size_t len);
@@ -47,7 +48,7 @@ class IMU {
 
     static bool WriteReg(WitRegType reg, uint16_t data);
     static bool RequestReg(WitRegType reg, size_t count);
-    static uint16_t ReadReg(WitRegType reg);
+    static int16_t ReadReg(WitRegType reg);
     static void ReadRegBulk(WitRegType reg, uint16_t *data, size_t count);
 
     static bool StartAccelerometerCalibration();
@@ -58,4 +59,6 @@ class IMU {
     static bool SetBandwitdth(WitBandwidthType bandwidth);
     static bool SetOutputRate(WitOutputRateType rate);
     static bool SetContent(WitContentType rsw);
+
+    static IMUState getState();
 };

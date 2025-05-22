@@ -1,8 +1,7 @@
 
 #pragma once
-
 #include "../../calculus/headers/vectors.hpp"
-#include "../../calculus/headers/quaternions.hpp"
+#include "../typings/state.hpp"
 #include <shared_mutex>
 #include <mutex>
 #include <chrono>
@@ -11,11 +10,7 @@
 class Estimator {
   private:
 
-    static struct IMUState {
-      Vector3 pos;
-      Quaternion base;
-      Quaternion ball;
-    } state;
+    static Quaternion orientation;
 
     static struct Position {
       private:

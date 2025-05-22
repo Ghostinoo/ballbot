@@ -15,7 +15,7 @@ WitRegType IMU::readRegIndex;
 
 std::vector<IMU::OnRegUpdateCallback> IMU::onRegUpdate;
 
-uint16_t IMU::sensorData[REGSIZE] = {0};
+int16_t IMU::sensorData[REGSIZE] = {};
 std::shared_mutex IMU::sensorDataMutex;
 
 
@@ -51,9 +51,9 @@ void IMU::copeWithData(WitOutputHeadType regType, uint16_t *data, size_t len) {
 
   std::unique_lock<std::shared_mutex> lock(sensorDataMutex);
 
-  memcpy(&sensorData[reg1.reg], reg1.pointer, reg1.size);
+  memcpy(&sensorData[reg1.reg], reg1.pointer, 2*reg1.size);
   for (IMU::OnRegUpdateCallback &cb : onRegUpdate)
-    std::thread(cb, reg2.reg, reg2.pointer, reg2.size).detach();
+    std::thread(cb, reg1.reg, reg1.pointer, reg1.size).detach();
 
   #ifdef DEBUG
     std::cout << "IMU Reg Update: 0x" << std::hex << reg1.reg << " - Data: ";
@@ -63,7 +63,7 @@ void IMU::copeWithData(WitOutputHeadType regType, uint16_t *data, size_t len) {
 
   if (reg2.size > 0) {
   
-    memcpy(&sensorData[reg2.reg], reg2.pointer, reg2.size);
+    memcpy(&sensorData[reg2.reg], reg2.pointer, 2*reg2.size);
     for (IMU::OnRegUpdateCallback &cb : onRegUpdate)
       std::thread(cb, reg2.reg, reg2.pointer, reg2.size).detach();
   
@@ -140,7 +140,7 @@ bool IMU::RequestReg(WitRegType reg, size_t count) {
   readRegIndex = reg;
   return true;
 }
-uint16_t IMU::ReadReg(WitRegType reg) {
+int16_t IMU::ReadReg(WitRegType reg) {
   if (reg >= REGSIZE) throw std::invalid_argument("Registro non valido.");
   std::shared_lock<std::shared_mutex> lock(sensorDataMutex);
   return sensorData[reg];
@@ -275,14 +275,34 @@ void IMU::Destroy() {
 void IMU::RegisterRegUpdateCallback(void (*callback)(WitRegType, uint16_t *, size_t)) {
   if (callback == nullptr) throw std::invalid_argument("Callback non valida.");
   onRegUpdate.push_back(callback);
+
   #ifdef DEBUG
-    std::cout << "IMU Callback Registered at position: " << onRegUpdateIndex << std::endl;
+    std::cout << "IMU Callback Registered at position: " << (int)(onRegUpdate.size()-1) << std::endl;
   #endif
 };
+
 
 void IMU::dataInputLoop() {
   uint8_t buffer[1];
   while (dataInputThreadRunning)
     while (wt901.readNoExcept(buffer, 1) && dataInputThreadRunning)
       handleDataIn(buffer[0]);
+}
+
+
+IMUState IMU::getState() {
+  IMUState result;
+
+  result.orientation.w = ReadReg(q0) / 32768.0f;
+  result.orientation.x = ReadReg(q1) / 32768.0f;
+  result.orientation.y = ReadReg(q2) / 32768.0f;
+  result.orientation.z = ReadReg(q3) / 32768.0f;
+
+  result.angularVelocity.x = ReadReg(GX) / 32768.0f * 2000.0f;
+  result.angularVelocity.y = ReadReg(GY) / 32768.0f * 2000.0f;
+  result.angularVelocity.z = ReadReg(GZ) / 32768.0f * 2000.0f;
+
+  result.temperature = ReadReg(TEMP) / 100.0f;
+
+  return result;
 }

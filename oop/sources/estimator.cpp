@@ -4,7 +4,6 @@
 #include <iostream>
 
 Estimator::Position Estimator::position;
-Estimator::IMUState Estimator::state;
 
 
 void Estimator::Position::set(const Vector3& newValue) {
