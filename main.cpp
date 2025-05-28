@@ -2,55 +2,58 @@
 #include "oop/headers/motors.hpp"
 #include "serial/headers/imu.hpp"
 #include "oop/headers/estimator.hpp"
+#include "oop/headers/shell.hpp"
+#include "oop/headers/battery.hpp"
 #include <cstring>
 #include <thread>
 #include <cmath>
+#include <atomic>
 
-// void shellThread() {
-//   std::string cmd;
-//   while (true) {
-//     std::getline(std::cin, cmd);
-//     if (cmd == "exit") break;
-//     std::cout << "Comando: " << cmd << std::endl;
-//     if (cmd == "stop") {
-//       return;
-//     }
-//   }
-// }
+std::atomic<bool> running{true};
 
-// void cb2(WitRegType reg, uint16_t *data, size_t len) {
-//   if (reg != WitRegType::q0) return;
-//   std::cout << "Quat: " << data[0] << " | " << data[1] << " | " << data[2] << std::endl;
-// }
-
-const float scalar = 200.0f;
-#define DTR (M_PI/180.0f)
-
-Vector3 vel;
+void thing() {
+  IMUState state;
+  while (running) {
+    state = IMU::getState();
+    std::cout << "Quaternione: " << state.orientation.w << " | " << state.orientation.x << " | " << state.orientation.y << " | " << state.orientation.z << "\n";
+    std::cout << "Velocità angolare: " << state.angularVelocity.x << " | " << state.angularVelocity.y << " | " << state.angularVelocity.z << "\n";
+    std::cout << "Temperatura: " << state.temperature << "\n";
+    std::cout << "Batteria: " << Battery::getVoltage() << "V" << "\n";
+    std::cout << "=============" << std::endl;
+    std::this_thread::sleep_for(std::chrono::milliseconds(50 ));
+  }
+}
 
 int main(int argc, char* argv[]) {
+
+  Shell::ProcessParameters(argc, argv);
+
   if (argc >= 2 && !strcmp(argv[1], "stop")) {
     Motors::PowerOff();
     return 0;
   }
 
   IMU::Initialize();
-  // IMU::RegisterRegUpdateCallback(cb2);
 
-  auto now = std::chrono::high_resolution_clock::now();
+  std::thread imuThread(thing);
 
-  while (true) {
-    now = std::chrono::high_resolution_clock::now();
+  Motors::Initialize();
+  Motors::PowerOn();
 
-    IMUState state = IMU::getState();
+  Vector3 vel(0,0,0);
+  const float velocity = 10.0f;
+  for (int j = 0; j < 5; j++)
+    for (int i = 0; i < 360; i++) {
+      vel.x = velocity * cosf(i * M_PI / 180);
+      vel.y = velocity * sinf(i * M_PI / 180);
+      Motors::SetSpeed(&vel);
+      std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
 
-    std::cout << "Quaternion " << state.orientation.w << " | " << state.orientation.x << " | " << state.orientation.y << " | " << state.orientation.z << std::endl;
-    std::cout << "Angular Velocity " << state.angularVelocity.x << " | " << state.angularVelocity.y << " | " << state.angularVelocity.z << std::endl;
-    std::cout << "Temperature " << state.temperature << std::endl;
-    std::cout << "==========================" << std::endl;
-
-    std::this_thread::sleep_until(now + std::chrono::milliseconds(20));
-  }
-
+  Motors::PowerOff();
+  running = false;
+  imuThread.join();
   IMU::Destroy();
+  
+  return 0;
 }

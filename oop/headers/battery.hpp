@@ -10,4 +10,7 @@ class Battery {
   
   public:
     static void updateFromADC(uint8_t data);
+    static float getVoltage() {
+      return voltage;
+    }
 };
