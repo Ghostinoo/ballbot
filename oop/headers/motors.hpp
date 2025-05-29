@@ -29,9 +29,9 @@ struct __attribute__((packed)) Communication {
 };
 
 enum class MotorPosition {
-  FRONT,
-  REAR_LEFT,
-  REAR_RIGHT
+  FRONT_LEFT,
+  FRONT_RIGHT,
+  REAR,
 };
 
 struct Motor {
@@ -46,11 +46,10 @@ struct Motor {
 class Motors {
   private:
     static Vector3 speed;
-    static Motor front, rear_r, rear_l;
+    static Motor front_l, front_r, rear;
   
     static void computeVectors(Vector3 *vel);
     static void writeSpeed();
-    static void updateEstimator(Vector3 vel);
   
     Motors () {}
     ~Motors() {}

@@ -20,7 +20,7 @@ void thing() {
     std::cout << "Temperatura: " << state.temperature << "\n";
     std::cout << "Batteria: " << Battery::getVoltage() << "V" << "\n";
     std::cout << "=============" << std::endl;
-    std::this_thread::sleep_for(std::chrono::milliseconds(50 ));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
 }
 
@@ -40,15 +40,18 @@ int main(int argc, char* argv[]) {
   Motors::Initialize();
   Motors::PowerOn();
 
-  Vector3 vel(0,0,0);
-  const float velocity = 10.0f;
-  for (int j = 0; j < 5; j++)
-    for (int i = 0; i < 360; i++) {
-      vel.x = velocity * cosf(i * M_PI / 180);
-      vel.y = velocity * sinf(i * M_PI / 180);
-      Motors::SetSpeed(&vel);
-      std::this_thread::sleep_for(std::chrono::milliseconds(5));
-    }
+  Vector3 vel(-1,0,0);
+  Motors::SetSpeed(&vel);
+  std::this_thread::sleep_for(std::chrono::seconds(10));
+
+  // const float velocity = 3.0f;
+  // for (int j = 0; j < 5; j++)
+  //   for (int i = 0; i < 360; i++) {
+  //     vel.x = velocity * cosf(i * M_PI / 180);
+  //     vel.y = velocity * sinf(i * M_PI / 180);
+  //     Motors::SetSpeed(&vel);
+  //     std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  //   }
 
   Motors::PowerOff();
   running = false;
