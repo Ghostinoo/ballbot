@@ -17,16 +17,16 @@ Motor::Motor(MotorPosition pos) {
   speed.f = 0;
   switch (pos) {
     case MotorPosition::FRONT_LEFT:
-      position = Vector3(SQRT2/2, 0, SQRT2/2) * BALL_WHEEL_RATIO;
-      normal = Vector3(0, 1, 0);
+      position = Vector3(-SQRT6/4, SQRT2/4, SQRT2/2) * BALL_WHEEL_RATIO;
+      normal = Vector3(0.5f, SQRT3/2, 0);
       break;
     case MotorPosition::FRONT_RIGHT: 
-      position = Vector3(-SQRT2/4, SQRT6/4, SQRT2/2) * BALL_WHEEL_RATIO;
-      normal = Vector3(-SQRT3/2, -0.5f, 0) ;
+      position = Vector3(SQRT6/4, SQRT2/4, SQRT2/2) * BALL_WHEEL_RATIO;
+      normal = Vector3(0.5f, -SQRT3/2, 0) ;
       break;
     case MotorPosition::REAR:
-      position = Vector3(-SQRT2/4, -SQRT6/4, SQRT2/2) * BALL_WHEEL_RATIO;
-      normal = Vector3(SQRT3/2, -0.5F, 0);
+      position = Vector3(0, -SQRT2/2, SQRT2/2) * BALL_WHEEL_RATIO;
+      normal = Vector3(-1, 0, 0);
       break;
     default:
       throw std::invalid_argument("Posizione motore non valida");
@@ -93,17 +93,17 @@ void Motors::writeSpeed() {
   Communication cmd, result;
   cmd.header = CMD_SET_SPEED;
   cmd.data[0].f = front_l.speed.f;
-  cmd.data[1].f = rear.speed.f;
-  cmd.data[2].f = front_r.speed.f;
+  cmd.data[1].f = -rear.speed.f;
+  cmd.data[2].f = -front_r.speed.f;
 
   arduino.open();
   arduino.write(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd));
   arduino.read(reinterpret_cast<uint8_t*>(&result), sizeof(result));
   arduino.close();
 
-  #ifdef DEBUG
+  // #ifdef DEBUG
     std::cout << "Sent I2C speeds: " << result.data[0].f << ", " << result.data[1].f << ", " << result.data[2].f << "\n";
-  #endif
+  // #endif
 
   if (!(result == cmd))
     throw std::runtime_error("Errore di comunicazione con ATMega328.");
