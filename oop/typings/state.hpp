@@ -6,6 +6,7 @@
 
 struct IMUState {
   Quaternion orientation;
+  Vector3 orv;
   Vector3 angularVelocity;
   float temperature;
 };

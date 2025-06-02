@@ -52,8 +52,8 @@ bool UART::open(int baudRate) {
   return true;
 }
 
-void UART::close() {
-  if (fd >= 0) ::close(fd);
+void UART::close() noexcept {
+  try { if (fd >= 0) ::close(fd); } catch(...) {}
   #ifdef DEBUG
     std::cout << "UART device '" << device << "' closed" << std::endl;
   #endif

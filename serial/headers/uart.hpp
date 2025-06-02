@@ -18,7 +18,7 @@ class UART {
     bool read(uint8_t* data, size_t count);
     bool writeNoExcept(const uint8_t* data, size_t count) noexcept;
     bool readNoExcept(uint8_t* data, size_t count) noexcept;
-    void close();
+    void close() noexcept;
 };
 
 extern UART wt901;

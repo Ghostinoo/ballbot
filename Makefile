@@ -12,6 +12,9 @@ all: $(OUT)
 # Link step
 $(OUT): $(OBJ)
 	$(CXX) $(CXXFLAGS) $(OBJ) -o $(OUT) $(LDFLAGS)
+	@echo "Applicando la priorità..."
+	@sudo setcap cap_sys_nice+ep $@ || echo "Impossibile applicare la priorità. Esegui come root."
+	@echo "Compilazione completata: '$(OUT)'"
 
 # Compile step: make sure build/ path exists
 $(BUILD_DIR)/%.o: %.cpp

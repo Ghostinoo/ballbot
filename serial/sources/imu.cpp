@@ -1,6 +1,7 @@
 
 #include "../headers/uart.hpp"
 #include "../headers/imu.hpp"
+#include <cmath>
 #include <cstring>
 #include <chrono>
 #include <mutex>
@@ -124,6 +125,9 @@ bool IMU::WriteReg(WitRegType reg, uint16_t data) {
     buffer[2] = reg & 0xFF;
     buffer[3] = data & 0xFF;
     buffer[4] = data >> 8;
+    // for (size_t i = 0; i < 5; i++) 
+    //   std::cout << std::hex << (int)buffer[i] << " ";
+    // std::cout << std::endl;
     return wt901.write(buffer, 5);
   } catch (const std::exception &e) {
     throw std::runtime_error("Errore nella scrittura del registro: " + std::to_string(reg));
@@ -206,17 +210,18 @@ bool IMU::StopMagnetometerCalibration() {
 }
 
 
-bool IMU::SetBandwitdth(WitBandwidthType bandwidth) {
+bool IMU::SetBandwidth(WitBandwidthType bandwidth) {
   if (!checkRange(bandwidth, BANDWIDTH_256HZ, BANDWIDTH_5HZ)) {
     throw std::invalid_argument("Larghezza di banda non valida.");
     return false;
   }
   try {
     WriteReg(KEY, KEY_UNLOCK);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
     WriteReg(BANDWIDTH, bandwidth);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
     WriteReg(SAVE, SAVE_PARAM);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
     return true;
   } catch (const std::exception &e) {
     throw std::runtime_error("Errore nella scrittura della larghezza di banda.");
@@ -230,13 +235,28 @@ bool IMU::SetOutputRate(WitOutputRateType rate) {
   }
   try {
     WriteReg(KEY, KEY_UNLOCK);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
     WriteReg(RRATE, rate);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
     WriteReg(SAVE, SAVE_PARAM);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
     return true;
   } catch (const std::exception &e) {
     throw std::runtime_error("Errore nella scrittura della frequenza di campionamento.");
+    return false;
+  }
+}
+bool IMU::SetOrientation() {
+  try {
+    WriteReg(KEY, KEY_UNLOCK);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    WriteReg(CALSW, CALREFANGLE);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    WriteReg(SAVE, SAVE_PARAM);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    return true;
+  } catch (const std::exception &e) {
+    throw std::runtime_error("Errore nella calibrazione dell'angolo.");
     return false;
   }
 }
@@ -247,10 +267,11 @@ bool IMU::SetContent(WitContentType rsw) {
   }
   try {
     WriteReg(KEY, KEY_UNLOCK);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
     WriteReg(RSW, rsw);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
     WriteReg(SAVE, SAVE_PARAM);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
     return true;
   } catch (const std::exception &e) {
     throw std::runtime_error("Errore nella scrittura dei contenuti.");
@@ -267,10 +288,12 @@ void IMU::Initialize() {
   dataInputThreadRunning = true;
   dataInputThread = std::thread(dataInputLoop);
 }
-void IMU::Destroy() {
+void IMU::Destroy() noexcept {
+  try {
   dataInputThreadRunning = false;
   dataInputThread.join();
   wt901.close();
+  } catch (...) {}
 }
 void IMU::RegisterRegUpdateCallback(void (*callback)(WitRegType, uint16_t *, size_t)) {
   if (callback == nullptr) throw std::invalid_argument("Callback non valida.");
@@ -292,6 +315,11 @@ void IMU::dataInputLoop() {
 
 IMUState IMU::getState() {
   IMUState result;
+  Vector3 orvb;
+  
+  orvb.x = ReadReg(Roll) / 32768.0f * M_PI; // 180.0f;
+  orvb.y = ReadReg(Pitch) / 32768.0f * M_PI; // 180.0f;
+  orvb.z = ReadReg(Yaw) / 32768.0f * M_PI; // 180.0f;
 
   result.orientation.w = ReadReg(q0) / 32768.0f;
   result.orientation.x = ReadReg(q1) / 32768.0f;
@@ -301,6 +329,11 @@ IMUState IMU::getState() {
   result.angularVelocity.x = ReadReg(GX) / 32768.0f * 2000.0f;
   result.angularVelocity.y = ReadReg(GY) / 32768.0f * 2000.0f;
   result.angularVelocity.z = ReadReg(GZ) / 32768.0f * 2000.0f;
+
+  result.orv.x = sinf(orvb.x) * cosf(orvb.y);
+  result.orv.y = sinf(orvb.y);
+  result.orv.z = cosf(orvb.x) * cosf(orvb.y);
+  result.orv = result.orv.normalize();
 
   result.temperature = ReadReg(TEMP) / 100.0f;
 

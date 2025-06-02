@@ -101,9 +101,9 @@ void Motors::writeSpeed() {
   arduino.read(reinterpret_cast<uint8_t*>(&result), sizeof(result));
   arduino.close();
 
-  // #ifdef DEBUG
+  #ifdef DEBUG
     std::cout << "Sent I2C speeds: " << result.data[0].f << ", " << result.data[1].f << ", " << result.data[2].f << "\n";
-  // #endif
+  #endif
 
   if (!(result == cmd))
     throw std::runtime_error("Errore di comunicazione con ATMega328.");
@@ -115,4 +115,9 @@ void Motors::SetSpeed(Vector3 *vel) {
   Motors::writeSpeed();
   std::thread(Estimator::updatePosition, speed).detach();
   speed = *vel;
+}
+
+void Motors::Stop() {
+  Vector3 vel(0,0,0);
+  SetSpeed(&vel);
 }

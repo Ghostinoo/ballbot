@@ -43,7 +43,7 @@ class IMU {
   public:
 
     static void Initialize();
-    static void Destroy();
+    static void Destroy() noexcept;
     static void RegisterRegUpdateCallback(void (*callback)(WitRegType, uint16_t *, size_t));
 
     static bool WriteReg(WitRegType reg, uint16_t data);
@@ -56,9 +56,10 @@ class IMU {
     static bool StartMagnetometerCalibration();
     static bool StopMagnetometerCalibration();
 
-    static bool SetBandwitdth(WitBandwidthType bandwidth);
+    static bool SetBandwidth(WitBandwidthType bandwidth);
     static bool SetOutputRate(WitOutputRateType rate);
     static bool SetContent(WitContentType rsw);
+    static bool SetOrientation();
 
     static IMUState getState();
 };

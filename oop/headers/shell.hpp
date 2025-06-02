@@ -25,4 +25,6 @@ class Shell {
 
 namespace ShellCommands {
   void setProportionalGain(float gain);
+  void stopMotors(bool kill);
+  void calibrate(bool calibrate);
 }

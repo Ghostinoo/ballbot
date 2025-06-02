@@ -59,4 +59,5 @@ class Motors {
     static void SetSpeed(Vector3 *vel);
     static void PowerOn();
     static void PowerOff();
+    static void Stop();
 };
